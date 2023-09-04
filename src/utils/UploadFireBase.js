@@ -1,5 +1,7 @@
-import storage from "../firebaseConfig";
+
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import storage from "./firbaseConfig";
+
 export const UploadFirebase = async (file) => {
     let imageurl = ""
     const storageRef = ref(storage, `/files/${file.name}`);
