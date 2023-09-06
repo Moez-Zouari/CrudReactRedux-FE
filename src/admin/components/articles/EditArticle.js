@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import Modal from 'react-bootstrap/Modal';
 import Col from 'react-bootstrap/Col';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Row from 'react-bootstrap/Row';
+import Modal from 'react-bootstrap/Modal';
+import { updateArticle } from "../../../features/articleSlice"
+
 import { useDispatch, useSelector } from "react-redux";
-import { createArticle } from "../../../features/articleSlice"
-import { getScategories } from "../../../features/scategorieSlice";
 
 import { FilePond, registerPlugin } from 'react-filepond'
 import 'filepond/dist/filepond.min.css';
@@ -15,28 +15,47 @@ import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orien
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview'
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
 import { UploadFirebase } from '../../../utils/UploadFireBase';
-
+import { getScategories } from '../../../features/scategorieSlice';
 registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview)
-const Createarticle = () => {
+
+const EditArticle = ({ art, show, handleClose }) => {
+
+    const { scategories } = useSelector((state) => state.storescategories);
     const [file, setFile] = useState("");
-    const [show, setShow] = useState(false);
-    const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
+    const [reference, setReference] = useState();
+    const [designation, setDesignation] = useState();
+    const [prix, setPrix] = useState();
+    const [marque, setMarque] = useState();
+    const [qtestock, setQtestock] = useState();
+    const [imageart, setImageart] = useState();
+    const [scategorieID, setScategorieID] = useState();
     const [validated, setValidated] = useState(false);
-    const [reference, setReference] = useState("");
-    const [designation, setDesignation] = useState("");
-    const [prix, setPrix] = useState("");
-    const [marque, setMarque] = useState("");
-    const [qtestock, setQtestock] = useState("");
-    const [imageart, setImageart] = useState("");
-    const [scategorieID, setScategorieID] = useState("");
-    const dispatch = useDispatch();
-    const { scategories, isLoading } = useSelector((state) => state.storescategories);
+    const dispatch = useDispatch()
+
+    useEffect(() => {
+        setReference(art.reference);
+        setDesignation(art.designation);
+        setPrix(art.prix);
+        setScategorieID(art.scategorieID._id);
+        console.log(art.scategorieID._id)
+        setMarque(art.marque);
+        setImageart(art.imageart)
+        setFile([
+            {
+                source: art.imageart,
+                options: { type: "local" }
+            }
+        ]);
+        setQtestock(art.qtestock);
+
+    }, [art])
     useEffect(() => {
         dispatch(getScategories());
     }, [dispatch]);
+
     const handleSubmit = (url) => {
         const article = {
+            ...art,
             reference: reference,
             designation: designation,
             prix: prix,
@@ -45,19 +64,8 @@ const Createarticle = () => {
             imageart: url,
             scategorieID: scategorieID
         }
-        dispatch(createArticle(article))
+        dispatch(updateArticle(article))
             .then(res => {
-                console.log("Insert OK", res);
-                setReference("");
-                setDesignation("");
-                setPrix("");
-                setMarque("");
-                setQtestock("");
-                setImageart("");
-                setScategorieID("");
-                setValidated(false);
-                setFile("")
-                handleClose()
 
             })
             .catch(error => {
@@ -65,50 +73,36 @@ const Createarticle = () => {
                 alert("Erreur ! Insertion non effectuée")
             })
     }
-
-
     const handleUpload = (event) => {
         event.preventDefault();
         const form = event.currentTarget;
         if (form.checkValidity() === true) {
-            if (file) {
-                if (!file[0].file) {
-                    alert("Please upload an image first!");
-                }
-                else {
-                    console.log(file[0].file)
-                    resultHandleUpload(file[0].file, event);
-                }
-            } else {
-                alert("Please upload an image first!");
+            if (!file) {
+                const url = imageart;
+                handleClose()
+                handleSubmit(url)
             }
+            else {
+                resultHandleUpload(file[0].file, event);
+            }
+
             setValidated(true);
         };
     }
     const resultHandleUpload = async (file) => {
         try {
             const url = await UploadFirebase(file);
+            handleClose()
             handleSubmit(url)
         } catch (error) {
-            console.log(error);
         }
     }
     return (
-        <>
-            <Button
-                onClick={handleShow}
-                variant="success"
-                size="sm"
-                style={{ 'margin': 10, 'left': 10, fontFamily: 'Arial' }}
-            >
-                <i className="fa-solid fa-circle-plus"></i>
-                &nbsp;
-                Nouveau
-            </Button>
+        <div>
             <Modal show={show} onHide={handleClose}>
                 <Form noValidate validated={validated} onSubmit={handleUpload}>
                     <Modal.Header closeButton>
-                        <Modal.Title> <h1 align="center">Ajout Article</h1></Modal.Title>
+                        <h2>Modification Product</h2>
                     </Modal.Header>
                     <Modal.Body>
                         <div className="container w-100 d-flex justify-content-center">
@@ -187,10 +181,21 @@ const Createarticle = () => {
                                         <Form.Group as={Col} md="6">
                                             <Form.Label>Image</Form.Label>
                                             <FilePond
+
                                                 files={file}
                                                 allowMultiple={false}
                                                 onupdatefiles={setFile}
                                                 labelIdle='<span className="filepond--label-action">Browse One</span>'
+                                                server={{
+                                                    load: (source, load, error, progress, abort, headers) => {
+                                                        var myRequest = new Request(source);
+                                                        fetch(myRequest).then(function (response) {
+                                                            response.blob().then(function (myBlob) {
+                                                                load(myBlob);
+                                                            });
+                                                        });
+                                                    }
+                                                }}
                                             />
                                         </Form.Group>
                                         <Form.Group as={Col} md="12">
@@ -202,8 +207,10 @@ const Createarticle = () => {
                                                 onChange={(e) => setScategorieID(e.target.value)}
                                             >
                                                 <option></option>
-                                                {!isLoading ? scategories.map((scat) => <option key={scat._id}
-                                                    value={scat._id}>{scat.nomscategorie}</option>) : null}
+
+                                                {scategories.map((scat) => <option key={scat._id}
+                                                    value={scat._id}>{scat.nomscategorie}</option>
+                                                )}
                                             </Form.Control>
                                         </Form.Group>
                                     </Row>
@@ -212,14 +219,13 @@ const Createarticle = () => {
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="secondary" onClick={handleClose}>
-                            Fermer
-                        </Button>
                         <Button type="submit">Enregistrer</Button>
+                        <Button type="button" className="btn btn-warning" onClick={handleClose}
+                        >Annuler</Button>
                     </Modal.Footer>
                 </Form>
             </Modal>
-        </>
+        </div>
     )
 }
-export default Createarticle
+export default EditArticle

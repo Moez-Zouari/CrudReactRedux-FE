@@ -3,7 +3,7 @@ import ReactLoading from 'react-loading';
 import { useSelector } from "react-redux"
 import Button from 'react-bootstrap/Button';
 import { toast } from 'react-toastify';
-// import EditArticle from './EditArticle';
+import EditArticle from './EditArticle';
 import { delArticle } from "../../../features/articleSlice"
 import { useDispatch } from "react-redux";
 import { MaterialReactTable } from 'material-react-table';
@@ -119,13 +119,13 @@ const AfficheAerticleTable = () => {
             <div>
                 <MaterialReactTable columns={columns} data={articles} />;
             </div>
-            {/* {showModal && (
+            {showModal && (
                 <EditArticle
                     show={showModal}
                     handleClose={handleClose}
                     art={selectedItem}
                 />
-            )} */}
+            )}
         </>
     )
 }
