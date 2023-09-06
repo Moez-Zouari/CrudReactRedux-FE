@@ -1,106 +1,99 @@
-import React, { useEffect, useCallback } from 'react'
-import { useDispatch, useSelector } from "react-redux";
-import {
-    addToCart,
-    clearCart,
-    decreaseCart,
-    getTotals,
-    removeFromCart,
-} from "../../features/cartSlice";
-import { Link } from "react-router-dom";
-const Cart = () => {
-    const cart = useSelector((state) => state.storecart);
-    const dispatch = useDispatch();
-    const computeTotal = useCallback(() => {
-        dispatch(getTotals());
-    }, [cart, dispatch])
-    useEffect(() => {
-        computeTotal()
-    }, [computeTotal])
-    const handleAddToCart = useCallback((product) => {
-        dispatch(addToCart(product));
-    }, [dispatch])
-    const handleDecreaseCart = useCallback((product) => {
-        dispatch(decreaseCart(product));
-    }, [dispatch])
-    const handleRemoveFromCart = useCallback((product) => {
-
-        dispatch(removeFromCart(product));
-    }, [dispatch])
-    const handleClearCart = useCallback(() => {
-        dispatch(clearCart());
-    }, [dispatch])
-    return (
-        <div className="cart-container">
-            <h2>Shopping Cart</h2>
-            {cart.cartItems.length === 0 ? (
-                <div className="cart-empty">
-                    <p>Panier Vide</p>
-                    <div className="start-shopping">
-                        <Link to="/">
-                            <span>Start Shopping</span>
-                        </Link>
-                    </div>
-                </div>
-            ) : (
-                <div>
-                    <div className="titles">
-                        <h3 className="product-title">Product</h3>
-                        <h3 className="price">Price</h3>
-                        <h3 className="quantity">Quantity</h3>
-                        <h3 className="total">Total</h3>
-                    </div>
-                    <div className="cart-items">
-                        {cart.cartItems &&
-                            cart.cartItems.map((cartItem) => (
-                                <div className="cart-item" key={cartItem._id}>
-                                    <div className="cart-product">
-                                        <img src={`${cartItem.imageart}`} alt={cartItem.designation} />
-                                        <div>
-                                            <h3>{cartItem.designation}</h3>
-                                            <p>{cartItem.reference}</p>
-                                            <button onClick={() => handleRemoveFromCart(cartItem)}>
-                                                Remove
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="cart-product-price"> {cartItem.prix} TND</div>
-                                    <div className="cart-product-quantity">
-                                        <button onClick={() => handleDecreaseCart(cartItem)}>
-                                            -
-                                        </button>
-                                        <div className="count">{cartItem.cartQuantity}</div>
-                                        <button onClick={() => handleAddToCart(cartItem)}>+</button>
-                                        25
-                                    </div>
-                                    <div className="cart-product-total-price">
-                                        {(cartItem.prix * cartItem.cartQuantity).toFixed(3)} TND
-                                    </div>
-                                </div>
-                            ))}
-                    </div>
-                    <div className="cart-summary">
-                        <button className="clear-btn" onClick={() => handleClearCart()}>
-                            Clear Cart
-                        </button>
-                        <div className="cart-checkout">
-                            <div className="subtotal">
-                                <span>Subtotal</span>
-                                <span className="amount">{cart.cartTotalAmount.toFixed(3)}
-                                    TND</span>
-                            </div>
-                            <p>Taxes and shipping calculated at checkout</p>
-                            <button>Check out</button>
-                            <div className="continue-shopping">
-                                <Link to="/">
-                                    <span>Continue Shopping</span>
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+import { createSlice } from "@reduxjs/toolkit";
+import { toast } from "react-toastify";
+const initialState = {
+    cartItems: localStorage.getItem("cartItems")
+        ? JSON.parse(localStorage.getItem("cartItems"))
+        : [],
+    cartTotalQuantity: 0,
+    cartTotalAmount: 0,
 };
-export default Cart;
+const cartSlice = createSlice({
+    name: "cart",
+    initialState,
+    reducers: {
+        addToCart(state, action) {
+            const existingIndex = state.cartItems.findIndex(
+                (item) => item._id === action.payload._id
+            );
+            if (existingIndex >= 0) {
+                state.cartItems[existingIndex] = {
+                    ...state.cartItems[existingIndex],
+                    cartQuantity: state.cartItems[existingIndex].cartQuantity + 1,
+                };
+                toast.info("Increased product quantity", {
+                    position: "bottom-left",
+                });
+            } else {
+
+                let tempProductItem = { ...action.payload, cartQuantity: 1 };
+                state.cartItems.push(tempProductItem);
+                toast.success("Product added to cart", {
+                    position: "bottom-left",
+                });
+            }
+            localStorage.setItem("cartItems", JSON.stringify(state.cartItems));
+        },
+        decreaseCart(state, action) {
+            const itemIndex = state.cartItems.findIndex(
+                (item) => item._id === action.payload._id
+            );
+            if (state.cartItems[itemIndex].cartQuantity > 1) {
+                state.cartItems[itemIndex].cartQuantity -= 1;
+                toast.info("Decreased product quantity", {
+                    position: "bottom-left",
+                });
+            } else if (state.cartItems[itemIndex].cartQuantity === 1) {
+                const nextCartItems = state.cartItems.filter(
+                    (item) => item._id !== action.payload._id
+                );
+                state.cartItems = nextCartItems;
+                toast.error("Product removed from cart", {
+                    position: "bottom-left",
+                });
+            }
+            localStorage.setItem("cartItems", JSON.stringify(state.cartItems));
+        },
+        removeFromCart(state, action) {
+            state.cartItems.map((cartItem) => {
+                if (cartItem._id === action.payload._id) {
+                    const nextCartItems = state.cartItems.filter(
+                        (item) => item._id !== cartItem._id
+                    );
+                    state.cartItems = nextCartItems;
+                    toast.error("Product removed from cart", {
+                        position: "bottom-left",
+                    });
+                }
+                localStorage.setItem("cartItems", JSON.stringify(state.cartItems));
+                return state;
+
+            });
+        },
+        getTotals(state, action) {
+            let { total, quantity } = state.cartItems.reduce(
+                (cartTotal, cartItem) => {
+                    const { prix, cartQuantity } = cartItem;
+                    const itemTotal = prix * cartQuantity;
+                    cartTotal.total += itemTotal;
+                    cartTotal.quantity += cartQuantity;
+                    return cartTotal;
+                },
+                {
+                    total: 0,
+                    quantity: 0,
+                }
+            );
+            total = parseFloat(total.toFixed(2));
+            state.cartTotalQuantity = quantity;
+            state.cartTotalAmount = total;
+        },
+        clearCart(state, action) {
+            state.cartItems = [];
+            localStorage.setItem("cartItems", JSON.stringify(state.cartItems));
+            toast.error("Cart cleared", { position: "bottom-left" });
+        },
+    },
+});
+export const { addToCart, decreaseCart, removeFromCart, getTotals, clearCart } =
+    cartSlice.actions;
+export default cartSlice.reducer;
