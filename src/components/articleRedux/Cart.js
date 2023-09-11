@@ -88,6 +88,13 @@ const Cart = () => {
                                     TND</span>
                             </div>
                             <p>Taxes and shipping calculated at checkout</p>
+                            <button onClick={() => { dispatch(clearCart()) }}>
+                                {<Link to={"/pay/" + cart.cartTotalAmount}
+                                    style={{ "color": "yellow" }}>
+                                    Validate and Pay
+                                </Link>
+                                }
+                            </button>
                             <button>Check out</button>
                             <div className="continue-shopping">
                                 <Link to="/listearticles">

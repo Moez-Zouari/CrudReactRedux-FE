@@ -6,6 +6,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import NavScroll from './admin/components/Navscroll';
 import { ToastContainer } from 'react-toastify';
 import Cart from './components/articleRedux/Cart';
+import StripePayment from './components/articleRedux/StripePayment';
 
 
 
@@ -21,6 +22,8 @@ function App() {
           <Route path='/listearticles' element={<Listarticles />} />
           <Route path='/articlesadmin' element={<ProductsAppAdmin />} />
           <Route path='/cart' element={<Cart />} />
+          <Route path='/pay/:total' element={<StripePayment />} />
+
         </Routes>
       </Router>
     </div>
