@@ -7,6 +7,9 @@ import NavScroll from './admin/components/Navscroll';
 import { ToastContainer } from 'react-toastify';
 import Cart from './components/articleRedux/Cart';
 import StripePayment from './components/articleRedux/StripePayment';
+import Login from './admin/components/Login';
+import Logout from './admin/components/Logout';
+import Register from './admin/components/Register';
 
 
 
@@ -23,6 +26,9 @@ function App() {
           <Route path='/articlesadmin' element={<ProductsAppAdmin />} />
           <Route path='/cart' element={<Cart />} />
           <Route path='/pay/:total' element={<StripePayment />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/logout' element={<Logout />} />
+          <Route path='/register' element={<Register />} />
 
         </Routes>
       </Router>
