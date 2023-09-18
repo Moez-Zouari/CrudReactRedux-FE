@@ -1,4 +1,7 @@
-import * as React from 'react';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { register, reset } from "../../features/authSlice";
+import { useDispatch, useSelector } from "react-redux";
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -12,10 +15,10 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-
 function Copyright(props) {
     return (
-        <Typography variant="body2" color="text.secondary" align="center" {...props}>
+        <Typography variant="body2" color="text.secondary" align="center"
+            {...props}>
             {'Copyright © '}
             <Link color="inherit" href="https://mui.com/">
                 Your Website
@@ -25,23 +28,33 @@ function Copyright(props) {
         </Typography>
     );
 }
-
-// TODO remove, this demo shouldn't need to reset the theme.
-
-const defaultTheme = createTheme();
-
+const theme = createTheme();
 export default function Register() {
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const data = new FormData(event.currentTarget);
-        console.log({
-            email: data.get('email'),
-            password: data.get('password'),
-        });
+    const navigate = useNavigate()
+    const dispatch = useDispatch();
+    const [firstName, setFirstName] = useState("")
+    const [lastName, setLastName] = useState("")
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [password2, setPassword2] = useState("");
+    const { user, isSuccess, isError } = useSelector((state) => state.auth);
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        if (password !== password2) {
+            alert('Passwords do not match')
+        } else {
+            const userData = {
+                firstname: firstName,
+                lastname: lastName,
+                email: email,
+                password: password
+            }
+            dispatch(register(userData))
+        }
+        navigate('/login')
     };
-
     return (
-        <ThemeProvider theme={defaultTheme}>
+        <ThemeProvider theme={theme}>
             <Container component="main" maxWidth="xs">
                 <CssBaseline />
                 <Box
@@ -58,7 +71,9 @@ export default function Register() {
                     <Typography component="h1" variant="h5">
                         Sign up
                     </Typography>
-                    <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
+                    <Box component="form" noValidate onSubmit={handleSubmit} sx={{
+                        mt: 3
+                    }}>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
                                 <TextField
@@ -69,6 +84,7 @@ export default function Register() {
                                     id="firstName"
                                     label="First Name"
                                     autoFocus
+                                    onChange={(event) => setFirstName(event.target.value)}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -79,6 +95,7 @@ export default function Register() {
                                     label="Last Name"
                                     name="lastName"
                                     autoComplete="family-name"
+                                    onChange={(event) => setLastName(event.target.value)}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -89,6 +106,7 @@ export default function Register() {
                                     label="Email Address"
                                     name="email"
                                     autoComplete="email"
+                                    onChange={(event) => setEmail(event.target.value)}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -100,12 +118,27 @@ export default function Register() {
                                     type="password"
                                     id="password"
                                     autoComplete="new-password"
+                                    onChange={(event) => setPassword(event.target.value)}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    required
+                                    fullWidth
+                                    name="password2"
+                                    label="Retype Password"
+                                    type="password"
+                                    id="password2"
+                                    autoComplete="new-password"
+                                    onChange={(event) => setPassword2(event.target.value)}
                                 />
                             </Grid>
                             <Grid item xs={12}>
                                 <FormControlLabel
-                                    control={<Checkbox value="allowExtraEmails" color="primary" />}
-                                    label="I want to receive inspiration, marketing promotions and updates via email."
+                                    control={<Checkbox value="allowExtraEmails" color="primary"
+                                    />}
+                                    label="I want to receive inspiration, marketing promotions
+                                and updates via email."
                                 />
                             </Grid>
                         </Grid>
@@ -114,6 +147,7 @@ export default function Register() {
                             fullWidth
                             variant="contained"
                             sx={{ mt: 3, mb: 2 }}
+                            onClick={(event) => handleSubmit(event)}
                         >
                             Sign Up
                         </Button>
