@@ -27,6 +27,8 @@ export const login = createAsyncThunk(
     });
 export const logout = createAsyncThunk("auth/logout", () => {
     localStorage.removeItem("CC_Token");
+    localStorage.removeItem("refresh_token");
+
 });
 export const authSlice = createSlice({
     name: "auth",

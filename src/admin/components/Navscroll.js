@@ -43,6 +43,7 @@ const NavScroll = () => {
                         <Nav.Link as={Link} to="/articlesadmin">Articles Admin</Nav.Link>
                         <Nav.Link as={Link} to="/listearticles">Liste Articles</Nav.Link>
                         <Nav.Link as={Link} to="/register">Inscription</Nav.Link>
+                        <Nav.Link as={Link} to="/logout">Logout</Nav.Link>
                     </Nav>
                     <Form className="d-flex">
                         <Form.Control

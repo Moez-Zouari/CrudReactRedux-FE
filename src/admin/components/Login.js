@@ -43,9 +43,7 @@ export default function Login() {
         };
         dispatch(login(objetuser));
     }
-    if (isLoggedIn) {
-        navigate("/menu");
-    }
+
     return (
         <ThemeProvider theme={theme}>
             <Container component="main" maxWidth="xs">
