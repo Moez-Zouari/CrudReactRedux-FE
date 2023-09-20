@@ -1,5 +1,8 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { signup, signin } from "../services/AuthService";
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+const MySwal = withReactContent(Swal)
 export const register = createAsyncThunk(
     "auth/register",
     async (user, thunkAPI) => {
@@ -74,12 +77,21 @@ export const authSlice = createSlice({
                 state.isSuccess = true;
                 console.log(action.payload);
                 state.user = action.payload.user;
-                localStorage.setItem("CC_Token", action.payload.accessToken);
+                MySwal.fire({
+                    icon: 'success',
+                    title: 'Connection was successful',
+                })
+                localStorage.setItem("CC_Token", action.payload.token);
+                localStorage.setItem("refresh_token", action.payload.refreshToken);
                 console.log(localStorage.getItem("CC_Token"))
             })
             .addCase(login.rejected, (state, action) => {
                 state.isLoggedIn = false;
                 state.user = null;
+                MySwal.fire({
+                    icon: 'error',
+                    title: 'Connection was refused',
+                })
             })
             .addCase(logout.fulfilled, (state, action) => {
                 state.isLoggedIn = false;
